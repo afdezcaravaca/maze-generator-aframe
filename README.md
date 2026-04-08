@@ -21,12 +21,13 @@ Edit `main.py` to change the maze size:
 ROWS = 25
 COLS = 25
 ```
+Run:
 
 ```bash
 python main.py
 ```
 
-Output: an HTML file in `./HTML/`. Open it in any browser and solve the maze!
+This will output an HTML file in `./HTML/`. Open it in any browser and solve the maze!
 
 ## 🗂️ Project structure
 
