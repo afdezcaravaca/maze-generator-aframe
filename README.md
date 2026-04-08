@@ -1,4 +1,4 @@
-# 🦬 maze-generator-aframe
+# 🕹️ maze-generator-aframe
 
 Random maze generator with interactive 3D first-person exploration, built with Python and [A-Frame](https://aframe.io/).
 
