@@ -1,4 +1,9 @@
 import os
+import base64
+
+def img_to_base64(path):
+    with open(path, 'rb') as f:
+        return base64.b64encode(f.read()).decode()
 
 def maze_to_html(maze, rows, cols, scale=2):
     """
@@ -20,6 +25,12 @@ def maze_to_html(maze, rows, cols, scale=2):
     # Make directory
     os.makedirs('./HTML', exist_ok=True)
 
+    # Images to base64:
+    floor_b64 = img_to_base64('./Images/floor_stones.jpg')
+    wall_b64 = img_to_base64('./Images/wall_stones.jpg')
+    moon_b64 = img_to_base64('./Images/moon.jpg')
+    sky_b64 = img_to_base64('./Images/sky.jpg')
+
     # Check whether the file exits already
     base = f'./HTML/maze_{rows}x{cols}'
     path = f'{base}.html'
@@ -27,6 +38,7 @@ def maze_to_html(maze, rows, cols, scale=2):
     while os.path.exists(path):
         path = f'{base}_{i}.html'
         i += 1
+
 
     # Header of the html file
     lines = ['<html>', 
@@ -131,10 +143,10 @@ def maze_to_html(maze, rows, cols, scale=2):
              '<a-light type="ambient" color="#223" intensity="10"></a-light>',
              '<a-light type="directional" color="#446" position="150 200 100" intensity="15"></a-light>',
              '<a-assets>',
-                '<img id="floor-tex" src="../Images/floor_stones.jpg">',
-                '<img id="wall-tex" src="../Images/wall_stones.jpg">',
-                '<img id="sky-tex"  src="../Images/sky.jpg">',
-                '<img id="moon-tex" src="../Images/moon.jpg">',
+                f'<img id="floor-tex" src="data:image/jpeg;base64,{floor_b64}">',
+                f'<img id="wall-tex" src="data:image/jpeg;base64,{wall_b64}">',
+                f'<img id="sky-tex"  src="data:image/jpeg;base64,{sky_b64}">',
+                f'<img id="moon-tex" src="data:image/jpeg;base64,{moon_b64}">',
              '</a-assets>',
              f'<a-sphere id="moon" radius="10" src="#moon-tex" visible="visible" position="150 200 0"></a-sphere>',
              # Camera

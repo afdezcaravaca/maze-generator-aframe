@@ -20,6 +20,7 @@ Edit `main.py` to change the maze size:
 ```python
 ROWS = 25
 COLS = 25
+SAVE_MAZE = True
 ```
 Run:
 
@@ -27,7 +28,7 @@ Run:
 python main.py
 ```
 
-This will output an HTML file in `./HTML/`. Open it in any browser and solve the maze!
+This will output an HTML file in `./HTML/` and a PNG in `./Mazes`. Open it in any browser and solve the maze!
 
 ## 🗂️ Project structure
 
