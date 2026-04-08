@@ -167,9 +167,9 @@ def maze_to_html(maze, rows, cols, scale=2):
         f'<a-plane position="{floor_x} 0 {floor_z}" rotation="-90 0 0" '
         f'width="{floor_w}" height="{floor_d}" material="src: #floor-tex; repeat: {floor_w//scale} {floor_d//scale}"></a-plane>'
         )
-    lines.append(f'<a-box position="2 1 0" width="{scale}" height="{scale}"'
-                             f' depth="{scale}" src="#wall-tex" class="wall"> </a-box>'
-                            )
+    # lines.append(f'<a-box position="2 1 0" width="{scale}" height="{scale}"'
+    #                          f' depth="{scale}" src="#wall-tex" class="wall"> </a-box>'
+    #                         )
     # Define the walls
     for row in range(maze.shape[0]):
         for col in range(maze.shape[1]):
