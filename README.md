@@ -1,21 +1,19 @@
-# maze-generator-aframe
+# 🦬 maze-generator-aframe
 
 Random maze generator with interactive 3D first-person exploration, built with Python and [A-Frame](https://aframe.io/).
 
-![Maze examples](Mazes/maze_15x15.png)
+## 🏗️ How it works
 
-## How it works
+<img align="right" src="Mazes/maze_15x15.png" width="280">
 
 1. **Maze generation** — Recursive backtracking (randomized DFS) produces a perfect maze on a `(2N+1)×(2M+1)` expanded grid.
 2. **3D rendering** — The grid is translated into A-Frame `<a-box>` entities, creating a navigable 3D environment.
 3. **First-person navigation** — WASD/arrow keys with mouse look. AABB collision detection prevents walking through walls.
 4. **Aerial view** — Press `T` to toggle a top-down camera with a red sphere marking your position.
 
-## Usage
+<br clear="right">
 
-```bash
-python main.py
-```
+## 🎮 Usage
 
 Edit `main.py` to change the maze size:
 
@@ -24,9 +22,13 @@ ROWS = 25
 COLS = 25
 ```
 
-Output: an HTML file in `./HTML/` — open it in any browser.
+```bash
+python main.py
+```
 
-## Project structure
+Output: an HTML file in `./HTML/`. Open it in any browser and solve the maze!
+
+## 🗂️ Project structure
 
 ```
 ├── main.py                  # Entry point — configure size here
@@ -37,7 +39,9 @@ Output: an HTML file in `./HTML/` — open it in any browser.
 └── Mazes/                   # Generated maze plots (.png)
 ```
 
-## Controls
+## ⌨️ Controls
+
+<div align="center">
 
 | Key | Action |
 |-----|--------|
@@ -48,7 +52,9 @@ Output: an HTML file in `./HTML/` — open it in any browser.
 | Mouse | Look around |
 | `T` | Toggle aerial view |
 
-## Requirements
+</div>
+
+## ⚙️ Requirements
 
 - Python 3
 - NumPy
