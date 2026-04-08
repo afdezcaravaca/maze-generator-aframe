@@ -37,7 +37,9 @@ This will output an HTML file in `./HTML/`. Open it in any browser and solve the
 │   ├── backtracking.py      # Maze generation algorithm
 │   └── maze_to_html.py      # A-Frame HTML writer
 ├── HTML/                    # Generated .html files
+├── Images/                  # Decorative .jpg images
 └── Mazes/                   # Generated maze plots (.png)
+
 ```
 
 ## ⌨️ Controls

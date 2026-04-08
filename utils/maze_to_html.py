@@ -127,15 +127,24 @@ def maze_to_html(maze, rows, cols, scale=2):
              '</head>',
              '<body>',
              '<a-scene>',
-
+             # Decoration:
+             '<a-light type="ambient" color="#223" intensity="10"></a-light>',
+             '<a-light type="directional" color="#446" position="150 200 100" intensity="15"></a-light>',
+             '<a-assets>',
+                '<img id="floor-tex" src="../Images/floor_stones.jpg">',
+                '<img id="wall-tex" src="../Images/wall_stones.jpg">',
+                '<img id="sky-tex"  src="../Images/sky.jpg">',
+                '<img id="moon-tex" src="../Images/moon.jpg">',
+             '</a-assets>',
+             f'<a-sphere id="moon" radius="10" src="#moon-tex" visible="visible" position="150 200 0"></a-sphere>',
              # Camera
-             f'<a-entity id="rig" maze-controls position="{1 * scale} 1.25 -2.5" rotation="0 180 0">',
-             f'  <a-camera wasd-controls="enabled: false" look-controls position="0 0 0"></a-camera>',
+             f'<a-entity id="rig" maze-controls position="{1 * scale} 1.25 {1 * scale}" rotation="0 180 0">',
+             f' <a-camera wasd-controls="enabled: false" look-controls position="0 0 0"></a-camera>',
              f'</a-entity>',
-             f'<a-sphere id="marker" radius="0.5" color="red" visible="false" position="{1 * scale} {scale + 0.5} -2.5"></a-sphere>'
+             f'<a-sphere id="marker" radius="0.5" color="red" visible="false" position="{1 * scale} {scale + 0.5} -2.5"></a-sphere>',
             ]
     # Sky
-    lines.append('<a-sky color="rgb(135, 206, 235)"></a-sky>')
+    lines.append('<a-sky src="#sky-tex"></a-sky>')
 
     # Floor:
     floor_x = (maze.shape[1] - 1) * scale / 2
@@ -144,9 +153,11 @@ def maze_to_html(maze, rows, cols, scale=2):
     floor_d = maze.shape[0] * scale
     lines.append(
         f'<a-plane position="{floor_x} 0 {floor_z}" rotation="-90 0 0" '
-        f'width="{floor_w}" height="{floor_d}" color="rgb(100, 100, 200)"></a-plane>'
+        f'width="{floor_w}" height="{floor_d}" material="src: #floor-tex; repeat: {floor_w//scale} {floor_d//scale}"></a-plane>'
         )
-    
+    lines.append(f'<a-box position="2 1 0" width="{scale}" height="{scale}"'
+                             f' depth="{scale}" src="#wall-tex" class="wall"> </a-box>'
+                            )
     # Define the walls
     for row in range(maze.shape[0]):
         for col in range(maze.shape[1]):
@@ -155,7 +166,7 @@ def maze_to_html(maze, rows, cols, scale=2):
                 y = scale / 2
                 z = row * scale
                 lines.append(f'<a-box position="{x} {y} {z}" width="{scale}" height="{scale}"'
-                             f' depth="{scale}" color="rgb(136, 136, 136)" class="wall"> </a-box>'
+                             f' depth="{scale}" src="#wall-tex" class="wall"> </a-box>'
                             )
     # End of the file
     lines += [

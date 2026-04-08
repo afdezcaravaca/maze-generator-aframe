@@ -64,7 +64,7 @@ def backtracking(rows:int, cols:int, save_maze:bool=True):
     stack = [(0,0)]# Loop while remains unvisited cells
     
     # Open exists --> Upper and lower corners
-    maze[0][1] = False
+    # maze[0][1] = False
     maze[2*rows][2*cols-1] = False
 
     # Loop until all cells have been visited.
