@@ -1,0 +1,983 @@
+<html>
+<head>
+<script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+
+            <script>
+            AFRAME.registerComponent('maze-controls', {
+            schema: { speed: { type: 'number', default: 5 }, size: { type: 'number', default: 0.5 } },
+            init: function () {
+                this.keys = {};
+                this.onKeyDown = function (e) { this.keys[e.key.toLowerCase()] = true; }.bind(this);
+                this.onKeyUp = function (e) { this.keys[e.key.toLowerCase()] = false; }.bind(this);
+                window.addEventListener('keydown', this.onKeyDown);
+                window.addEventListener('keyup', this.onKeyUp);
+            },
+            tick: function (t, dt) {
+                if (!dt) return;
+                var cam = this.el.querySelector('[camera]');
+                if (!cam) return;
+                var dir = new THREE.Vector3();
+                cam.object3D.getWorldDirection(dir);
+                dir.negate();
+                dir.y = 0;
+                dir.normalize();
+                var right = new THREE.Vector3(-dir.z, 0, dir.x);
+                var move = new THREE.Vector3();
+                if (this.keys['w'] || this.keys['arrowup']) move.add(dir);
+                if (this.keys['s'] || this.keys['arrowdown']) move.sub(dir);
+                if (this.keys['a'] || this.keys['arrowleft']) move.sub(right);
+                if (this.keys['d'] || this.keys['arrowright']) move.add(right);
+                if (move.length() === 0) return;
+                move.normalize();
+                var spd = this.data.speed * dt / 1000;
+                var pos = this.el.getAttribute('position');
+                var newX = pos.x + move.x * spd;
+                var newZ = pos.z + move.z * spd;
+                var walls = document.querySelectorAll('.wall');
+                var s = this.data.size;
+                var blockedX = false, blockedZ = false;
+                for (var i = 0; i < walls.length; i++) {
+                var w = walls[i].object3D.position;
+                var ws = parseFloat(walls[i].getAttribute('width')) / 2;
+                var oX = (ws + s) - Math.abs(newX - w.x);
+                var oZ = (ws + s) - Math.abs(pos.z - w.z);
+                if (oX > 0 && oZ > 0) blockedX = true;
+                oX = (ws + s) - Math.abs(pos.x - w.x);
+                oZ = (ws + s) - Math.abs(newZ - w.z);
+                if (oX > 0 && oZ > 0) blockedZ = true;
+                }
+                if (!blockedX) pos.x = newX;
+                if (!blockedZ) pos.z = newZ;
+                this.el.setAttribute('position', pos);
+            },
+            remove: function () {
+                window.removeEventListener('keydown', this.onKeyDown);
+                window.removeEventListener('keyup', this.onKeyUp);
+            }
+            });
+            </script>
+            
+
+            <script>
+            document.addEventListener('keydown', function(e) {
+            if (e.key !== 't' && e.key !== 'T') return;
+            var rig = document.querySelector('#rig');
+            var cam = rig.querySelector('[camera]');
+            var marker = document.querySelector('#marker');
+            if (!rig.dataset.aerial || rig.dataset.aerial === 'false') {
+                var p = rig.getAttribute('position');
+                marker.setAttribute('position', p.x + ' ' + 2.5 + ' ' + p.z);
+                marker.setAttribute('visible', true);
+                rig.dataset.savedPos = JSON.stringify(rig.getAttribute('position'));
+                rig.dataset.savedCamRot = JSON.stringify(cam.getAttribute('rotation'));
+                cam.setAttribute('look-controls', 'enabled', false);
+                cam.setAttribute('rotation', '0 0 0');
+                rig.setAttribute('position', '40.0 82 40.0');
+                rig.setAttribute('rotation', '-90 0 0');
+                rig.querySelector('[maze-controls]') && rig.removeAttribute('maze-controls');
+                rig.dataset.aerial = 'true';
+            } else {
+                marker.setAttribute('visible', false);
+                var p = JSON.parse(rig.dataset.savedPos);
+                var cr = JSON.parse(rig.dataset.savedCamRot);
+                rig.setAttribute('position', p);
+                rig.setAttribute('rotation', '0 180 0');
+                cam.setAttribute('rotation', cr);
+                cam.setAttribute('look-controls', 'enabled', true);
+                rig.setAttribute('maze-controls', '');
+                rig.dataset.aerial = 'false';
+            }
+            });
+            </script>
+            </head>
+<body>
+<a-scene>
+<a-entity id="rig" maze-controls position="2 1.25 -2.5" rotation="0 180 0">
+  <a-camera wasd-controls="enabled: false" look-controls position="0 0 0"></a-camera>
+</a-entity>
+<a-sphere id="marker" radius="0.5" color="red" visible="false" position="2 2.5 -2.5"></a-sphere>
+<a-sky color="rgb(135, 206, 235)"></a-sky>
+<a-plane position="40.0 0 40.0" rotation="-90 0 0" width="82" height="82" color="rgb(100, 100, 200)"></a-plane>
+<a-box position="0 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="10 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="78 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 0" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 2" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 2" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 2" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 2" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 2" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 2" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 2" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 2" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="2 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 4" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 6" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 8" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 10" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 12" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 14" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 16" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 18" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 20" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 22" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="2 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="10 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 24" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 26" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="78 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 28" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 30" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="10 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 32" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 34" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="10 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 36" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 38" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 40" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 42" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 44" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 46" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="10 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="78 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 48" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 50" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 52" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 54" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="10 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 56" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 58" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="2 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 60" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 62" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="10 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 64" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 66" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="78 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 68" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 70" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="2 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="10 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 72" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 74" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 74" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 74" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 74" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 74" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 74" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 74" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 74" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 76" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 78" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 78" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 78" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 78" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 78" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="0 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="2 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="4 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="6 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="8 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="10 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="12 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="14 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="16 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="18 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="20 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="22 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="24 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="26 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="28 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="30 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="32 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="34 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="36 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="38 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="40 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="42 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="44 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="46 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="48 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="50 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="52 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="54 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="56 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="58 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="60 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="62 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="64 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="66 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="68 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="70 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="72 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="74 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="76 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+<a-box position="80 1.0 80" width="2" height="2" depth="2" color="rgb(136, 136, 136)" class="wall"> </a-box>
+</a-scene>
+</body>
+</html>
