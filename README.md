@@ -4,13 +4,20 @@ Random maze generator with interactive 3D first-person exploration, built with P
 
 ## 🏗️ How it works
 
-<img align="right" src="Images/laberinth.png" width="255">  
+<img align="right" src="Images/laberinth.png" width="270">  
 
 1. **Maze generation** — Recursive backtracking (randomized DFS) produces a perfect maze on a `(2N+1)×(2M+1)` expanded grid.
 2. **3D rendering** — The grid is translated into A-Frame `<a-box>` entities, creating a navigable 3D environment.
 3. **First-person navigation** — WASD/arrow keys with mouse look. Collision detection prevents walking through walls.
 4. **Aerial view** — Press `T` to toggle a top-down camera with a red sphere marking your position.
+5. 
+
 <br clear="right">
+
+> [!NOTE]
+> A-Frame requires the page to be served over HTTP.
+> The [Live Preview](https://marketplace.visualstudio.com/items?itemName=ms-vscode.live-server)
+> extension for VS Code is a quick way to launch a local server with live reload.
 
 ## 🎮 Usage
 <img align="right" src="Images/gameplay.png" width="280">
@@ -65,3 +72,22 @@ This will output an HTML file in `./HTML/` and a PNG in `./Mazes`. Open it in an
 - Python 3
 - NumPy
 - Matplotlib
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+The MIT License is a permissive license that is short and to the point. It allows for broad use, modification, and distribution of the software.
+
+| Permissions | Conditions | Limitations |
+|---|---|---|
+| ✅ Commercial use | ℹ️ License and copyright notice | ❌ Liability |
+| ✅ Modification |  | ❌ Warranty |
+| ✅ Distribution |  |  |
+| ✅ Private use |  |  |
+
+Key Terms
+ * Rights: You can do almost anything with the code, including using it in proprietary software.
+ * Requirement: You must include the original copyright notice and the license text in any copy of the software.
+ * No Warranty: The software is provided "as is", and the authors cannot be held liable for any issues arising from its use.
+
