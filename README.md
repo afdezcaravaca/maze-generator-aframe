@@ -10,14 +10,13 @@ Random maze generator with interactive 3D first-person exploration, built with P
 2. **3D rendering** — The grid is translated into A-Frame `<a-box>` entities, creating a navigable 3D environment.
 3. **First-person navigation** — WASD/arrow keys with mouse look. Collision detection prevents walking through walls.
 4. **Aerial view** — Press `T` to toggle a top-down camera with a red sphere marking your position.
-5. 
 
-<br clear="right">
-
-> [!NOTE]
+> [!TIP]
 > A-Frame requires the page to be served over HTTP.
 > The [Live Preview](https://marketplace.visualstudio.com/items?itemName=ms-vscode.live-server)
 > extension for VS Code is a quick way to launch a local server with live reload.
+
+<br clear="right">
 
 ## 🎮 Usage
 <img align="right" src="Images/gameplay.png" width="280">
