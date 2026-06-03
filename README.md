@@ -4,6 +4,7 @@
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-323330?logo=javascript&logoColor=F7DF1E)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## 🏗️ How it works
 
