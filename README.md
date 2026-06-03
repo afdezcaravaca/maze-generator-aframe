@@ -1,6 +1,9 @@
 # 🕹️ maze-generator-aframe
 
-Random maze generator with interactive 3D first-person exploration, built with Python and [A-Frame](https://aframe.io/).
+![Status](https://img.shields.io/badge/status-completed-green?logo=git&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-323330?logo=javascript&logoColor=F7DF1E)
 
 ## 🏗️ How it works
 
